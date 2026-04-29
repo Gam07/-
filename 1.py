@@ -1,32 +1,25 @@
 import streamlit as st
 import math
-import plotly.graph_objects as go
 
 # ======================
-# 🎨 CSS (Modern UI)
+# 🎨 UI
 # ======================
+st.set_page_config(page_title="Eccentric Footing", layout="centered")
+
 st.markdown("""
 <style>
-body {
-    background-color: #f4f6f9;
-}
-.title {
-    font-size: 40px;
-    font-weight: bold;
-    text-align: center;
-    color: #1f3c88;
-}
+.title {font-size:38px; font-weight:bold; text-align:center; color:#1f3c88;}
 .card {
-    background: white;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0px 6px 20px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    background:#ffffff;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom:20px;
 }
 .result {
-    background: #eef7ff;
-    padding: 20px;
-    border-radius: 12px;
+    background:#eef7ff;
+    padding:20px;
+    border-radius:12px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -34,7 +27,7 @@ body {
 st.markdown('<div class="title">🏗️ Eccentric Footing Design</div>', unsafe_allow_html=True)
 
 # ======================
-# 🧮 Terzaghi Function
+# 🧮 FUNCTION
 # ======================
 def bearing_factors(phi):
     phi_rad = math.radians(phi)
@@ -50,28 +43,27 @@ def bearing_factors(phi):
 
 
 # ======================
-# 📐 Input Section
+# 📐 INPUT
 # ======================
 st.markdown('<div class="card">', unsafe_allow_html=True)
 
 col1, col2 = st.columns(2)
-
 with col1:
-    B = st.number_input("Footing Width B (m)", value=1.90)
-    L = st.number_input("Footing Length L (m)", value=1.90)
+    B = st.number_input("Footing Width B (m)", value=1.9)
+    L = st.number_input("Footing Length L (m)", value=1.9)
 
 with col2:
     Df = st.number_input("Depth Df (m)", value=1.0)
     FS = st.number_input("Factor of Safety", value=3.0)
 
-st.markdown("### 📍 Column Positions (m) + Load")
+st.markdown("### 📍 Column Positions + Load")
 
 cols = []
 loads = []
 
 for i in range(4):
     c1, c2, c3 = st.columns(3)
-    x = c1.number_input(f"x{i+1}", value=0.3 + i*0.3)
+    x = c1.number_input(f"x{i+1}", value=0.3 + i*0.2)
     y = c2.number_input(f"y{i+1}", value=0.3 + i*0.2)
     P = c3.number_input(f"P{i+1} (kN)", value=200.0)
 
@@ -81,11 +73,9 @@ for i in range(4):
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================
-# 🌱 Soil
+# 🌱 SOIL
 # ======================
 st.markdown('<div class="card">', unsafe_allow_html=True)
-
-st.markdown("### 🌱 Soil Properties")
 
 c = st.number_input("Cohesion c (kPa)", value=10.0)
 phi = st.number_input("Friction angle φ (deg)", value=30.0)
@@ -94,7 +84,7 @@ gamma = st.number_input("Unit weight γ (kN/m³)", value=18.0)
 st.markdown('</div>', unsafe_allow_html=True)
 
 # ======================
-# 🚀 Calculation
+# 🚀 CALC
 # ======================
 if st.button("🚀 Calculate"):
 
@@ -104,7 +94,7 @@ if st.button("🚀 Calculate"):
     x_bar = sum(loads[i]*cols[i][0] for i in range(4)) / P_total
     y_bar = sum(loads[i]*cols[i][1] for i in range(4)) / P_total
 
-    # center footing
+    # footing center
     x_center = B / 2
     y_center = L / 2
 
@@ -116,8 +106,7 @@ if st.button("🚀 Calculate"):
 
     st.markdown('<div class="card result">', unsafe_allow_html=True)
 
-    st.markdown("### 📊 Results")
-
+    st.write("### 📊 Results")
     st.write(f"ex = {ex:.3f} m")
     st.write(f"ey = {ey:.3f} m")
 
@@ -144,46 +133,12 @@ if st.button("🚀 Calculate"):
     st.markdown('</div>', unsafe_allow_html=True)
 
     # ======================
-    # 📈 Plot (Plotly)
+    # 🧭 SIMPLE DIAGRAM
     # ======================
-    fig = go.Figure()
+    st.write("### 📐 Layout (Text Diagram)")
 
-    # footing
-    fig.add_shape(type="rect",
-                  x0=0, y0=0, x1=B, y1=L,
-                  line=dict(color="blue"))
+    st.write(f"Footing center = ({x_center:.2f}, {y_center:.2f})")
+    st.write(f"Load centroid = ({x_bar:.2f}, {y_bar:.2f})")
 
-    # columns
-    for (x,y) in cols:
-        fig.add_trace(go.Scatter(
-            x=[x], y=[y],
-            mode='markers',
-            marker=dict(size=10, color='red'),
-            name="Column"
-        ))
-
-    # centroid
-    fig.add_trace(go.Scatter(
-        x=[x_bar], y=[y_bar],
-        mode='markers',
-        marker=dict(size=12, color='green'),
-        name="Load Centroid"
-    ))
-
-    # footing center
-    fig.add_trace(go.Scatter(
-        x=[x_center], y=[y_center],
-        mode='markers',
-        marker=dict(size=12, color='purple'),
-        name="Footing Center"
-    ))
-
-    fig.update_layout(
-        title="📐 Footing Layout",
-        xaxis_title="X (m)",
-        yaxis_title="Y (m)",
-        width=600,
-        height=600
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
+    for i, (x,y) in enumerate(cols):
+        st.write(f"Column {i+1}: ({x:.2f}, {y:.2f})")
